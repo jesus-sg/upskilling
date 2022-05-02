@@ -1,23 +1,5 @@
-#Code for the frontend service of the Nginx Deployment
-apiVersion: v1
-kind: Service
-metadata:
-  name: nginx-service
-spec:
-  type: NodePort
-  selector:
-    app: front-nginx
-  ports:
-  - port: 80
-    targetPort: 80
-    
-
-
-
-
----
-#Code for the Deployment of the frontnend Nginx
-apiVersion: v1/apps
+#Code for the Deployment of the frontnend Nginx 
+apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: front-nginx
@@ -46,4 +28,40 @@ spec:
         ports:
         - containerPort: 80
 ---
-#Code for the 
+#Code for the Nginx ingress
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: nginx-ingress
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /
+spec:
+  rules:
+    - host: nginx.local
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: nginx-service
+                port: 
+                  number: 80
+
+---
+#Code for the frontend service of the Nginx Deployment
+apiVersion: v1
+kind: Service
+metadata:
+  name: nginx-service
+spec:
+  type: NodePort
+  selector:
+    app: front-nginx
+  ports:
+  - port: 80
+    targetPort: 80
+    
+---
+
+#Code for the Service
