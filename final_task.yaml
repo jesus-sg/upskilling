@@ -28,6 +28,20 @@ spec:
         ports:
         - containerPort: 80
 ---
+#Code for the frontend service of the Nginx Deployment
+apiVersion: v1
+kind: Service
+metadata:
+  name: nginx-service
+spec:
+  type: NodePort
+  selector:
+    app: front-nginx
+  ports:
+  - port: 80
+    targetPort: 80
+    
+---
 #Code for the Nginx ingress
 apiVersion: networking.k8s.io/v1
 kind: Ingress
@@ -47,21 +61,6 @@ spec:
                 name: nginx-service
                 port: 
                   number: 80
-
----
-#Code for the frontend service of the Nginx Deployment
-apiVersion: v1
-kind: Service
-metadata:
-  name: nginx-service
-spec:
-  type: NodePort
-  selector:
-    app: front-nginx
-  ports:
-  - port: 80
-    targetPort: 80
-    
 ---
 
-#Code for the Service
+#Code for the Deployment of the app
