@@ -28,6 +28,36 @@ spec:
         ports:
         - containerPort: 80
 ---
+#Code for the Deployment of the app
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: jboss
+  labels: 
+    app: jboss
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: jboss
+  template:
+    metadata:
+      labels:
+        app: jboss
+    spec:
+      containers:
+      - name: jboss
+        image: jboss:latest
+        resources:
+          requests:
+            memory: "1024Mib"
+            cpu: "1000m"
+          limits:
+            memory: "2048Mib"
+            cpu: "2000m"
+        ports:
+        - containerPort: 8080
+---
 #Code for the frontend service of the Nginx Deployment
 apiVersion: v1
 kind: Service
@@ -61,6 +91,3 @@ spec:
                 name: nginx-service
                 port: 
                   number: 80
----
-
-#Code for the Deployment of the app
