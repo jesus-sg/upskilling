@@ -32,22 +32,22 @@ spec:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: jboss
+  name: tomcat
   labels: 
     app: jboss
 spec:
   replicas: 3
   selector:
     matchLabels:
-      app: jboss
+      app: tomcat
   template:
     metadata:
       labels:
-        app: jboss
+        app: tomcat
     spec:
       containers:
-      - name: jboss
-        image: jboss:latest
+      - name: tomcat
+        image: tomcat:latest
         resources:
           requests:
             memory: "1024Mib"
