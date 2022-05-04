@@ -31,12 +31,12 @@ data:
     listen       80;
     server_name  nginx.local; # this DNS record needs to be forced at the hosts file
     access_log  /var/log/nginx/access.log  main;
-
     location / {
     #rewrite ^/(.*)$ http://10.96.0.100:8080/$1 permanent;
     proxy_pass http://10.96.0.100:8080/;
     }
     }
+
 
     sendfile        on;
     #tcp_nopush     on;
@@ -48,6 +48,43 @@ data:
     include /etc/nginx/conf.d/*.conf;
     }
     
+---
+#Config map volume for tomcat app
+apiVersion: v1
+kind: ConfigMap
+metadata: 
+  name: tomcat-sample
+  namespace: default
+data: 
+  index.html: | 
+    <html>
+    <head>
+    <title>Sample "Hello, World" Application</title>
+    </head>
+    <body bgcolor=white>
+    
+    <table border="0">
+    <tr>
+    <td>
+    <img src="images/tomcat.gif">
+    </td>
+    <td>
+    <h1>Sample "Hello, World" Application</h1>
+    <p>This is the home page for a sample application used to illustrate the
+    source directory organization of a web application utilizing the principles
+    outlined in the Application Developer's Guide.
+    </td>
+    </tr>
+    </table>
+
+    <p>To prove that they work, you can execute either of the following links:
+    <ul>
+    <li>To a <a href="hello.jsp">JSP page</a>.
+    <li>To a <a href="hello">servlet</a>.
+    </ul>
+    
+    </body>
+    </html>
 ---
 #Code for the Deployment of the frontnend Nginx 
 apiVersion: apps/v1
@@ -106,6 +143,14 @@ spec:
         resources:
         ports:
         - containerPort: 8080
+        volumeMounts:
+          - name: volume-tomcat-sample
+            mountPath: /usr/local/tomcat/webapps/ROOT/index.html
+            subPath: index.html
+      volumes:
+        - name: volume-tomcat-sample
+          configMap:
+            name: tomcat-sample
 ---
 #Code for the frontend service of the Nginx Deployment
 apiVersion: v1
