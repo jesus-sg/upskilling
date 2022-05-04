@@ -2,7 +2,7 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: nginx-config
+  name: nginx-config-configmap
   namespace: default
 data:
   nginx.conf: |
@@ -27,6 +27,16 @@ data:
                       '"$http_user_agent" "$http_x_forwarded_for"';
 
     access_log  /var/log/nginx/access.log  main;
+    server { 
+    listen       80;
+    server_name  nginx.local; # this DNS record needs to be forced at the hosts file
+    access_log  /var/log/nginx/access.log  main;
+
+    location / {
+    #rewrite ^/(.*)$ http://10.96.0.100:8080/$1 permanent;
+    proxy_pass http://10.96.0.100:8080/;
+    }
+    }
 
     sendfile        on;
     #tcp_nopush     on;
@@ -37,15 +47,7 @@ data:
 
     include /etc/nginx/conf.d/*.conf;
     }
-    server { 
-    listen       80;
-    server_name  nginx.local; # this DNS record needs to be forced at the hosts file
     
-
-    location / {
-    proxy_pass: http://10.96.0.100 
-    }
-    }
 ---
 #Code for the Deployment of the frontnend Nginx 
 apiVersion: apps/v1
@@ -69,12 +71,6 @@ spec:
       - name: nginx
         image: nginx:latest
         resources:
-          requests:
-            memory: "500Mib"
-            cpu: "500m"
-          limits:
-            memory: "1024Mib"
-            cpu: "1000m"
         ports:
         - containerPort: 80
         volumeMounts:
@@ -108,12 +104,6 @@ spec:
       - name: tomcat
         image: tomcat:latest
         resources:
-          requests:
-            memory: "1024Mib"
-            cpu: "1000m"
-          limits:
-            memory: "2048Mib"
-            cpu: "2000m"
         ports:
         - containerPort: 8080
 ---
