@@ -1,8 +1,58 @@
+#Config map volume for nginx Front End
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: nginx-config
+  namespace: default
+data:
+  nginx.conf: |
+    user  nginx;
+    worker_processes  auto;
+
+    error_log  /var/log/nginx/error.log notice;
+    pid        /var/run/nginx.pid;
+
+
+    events {
+      worker_connections  1024;
+    }
+
+
+    http {
+    include       /etc/nginx/mime.types;
+    default_type  application/octet-stream;
+
+    log_format  main  '$remote_addr - $remote_user [$time_local] "$request" '
+                      '$status $body_bytes_sent "$http_referer" '
+                      '"$http_user_agent" "$http_x_forwarded_for"';
+
+    access_log  /var/log/nginx/access.log  main;
+
+    sendfile        on;
+    #tcp_nopush     on;
+
+    keepalive_timeout  65;
+
+    #gzip  on;
+
+    include /etc/nginx/conf.d/*.conf;
+    }
+    server { 
+    listen       80;
+    server_name  nginx.local; # this DNS record needs to be forced at the hosts file
+    
+
+    location / {
+    proxy_pass: http://10.96.0.100 
+    }
+    }
+---
 #Code for the Deployment of the frontnend Nginx 
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: front-nginx
+  namespace: default
   labels:
     app: front-nginx
 spec:
@@ -27,12 +77,21 @@ spec:
             cpu: "1000m"
         ports:
         - containerPort: 80
+        volumeMounts:
+          - name: nginx-config
+            mounthPath: /etc/nginx/nginx.conf
+            subPath: nginx.conf
+      volumes:
+      - name: nginx-config
+        configMap:
+          name: nginx-config-configmap
 ---
-#Code for the Deployment of the app
+#Code for the Deployment of the tomcat app
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: tomcat
+  namespace: default
   labels: 
     app: jboss
 spec:
@@ -71,6 +130,20 @@ spec:
   - port: 80
     targetPort: 80
     
+---
+#code for the tomcat app service
+apiVersion: v1
+kind: Service
+metadata:
+  name: tomcat
+spec:
+  type: ClusterIP
+  clusterIP: 10.96.0.100
+  selector:
+    app: tomcat
+  ports:
+    - port: 8080
+      targetPort: 8080
 ---
 #Code for the Nginx ingress
 apiVersion: networking.k8s.io/v1
